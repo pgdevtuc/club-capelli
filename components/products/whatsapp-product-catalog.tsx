@@ -1,17 +1,16 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { WhatsAppProductCard } from "./whatsapp-product-card"
-import { WhatsAppProductCardSkeleton } from "./whatsapp-product-card-skeleton"
+import { ProductCardSkeleton } from "./whatsapp-product-card-skeleton"
 import { ProductFilters } from "./product-filters"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import type { ApiListResponse } from "@/types/IWhatsappProductCatalog"
-import { IProduct } from "@/lib/models/product"
+import type { IProduct } from "@/lib/models/product"
+import { ProductCard } from "./whatsapp-product-card"
 
 type ApiCategories = { categories: { name: string; count: number }[] }
 
-// ------- debounce simple (espera antes de disparar fetch) -------
 function useDebounce<T>(value: T, delay = 450) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -21,13 +20,12 @@ function useDebounce<T>(value: T, delay = 450) {
   return debounced
 }
 
-export function WhatsAppProductCatalog() {
+export function ProductCatalog() {
   const [products, setProducts] = useState<IProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
-  // categorías globales
   const [categories, setCategories] = useState<string[]>([])
   const [filterPrice, setFilterPrice] = useState<string>("all")
   const [maxPrice, setMaxPrice] = useState<number>(0)
@@ -43,7 +41,6 @@ export function WhatsAppProductCatalog() {
 
   const abortRef = useRef<AbortController | null>(null)
 
-  // cargar categorías + primera página
   useEffect(() => {
     ;(async () => {
       try {
@@ -63,7 +60,6 @@ export function WhatsAppProductCatalog() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // cuando cambian filtros/búsqueda (debounced), reset y recarga
   useEffect(() => {
     if (!initialLoading) {
       setProducts([])
@@ -74,7 +70,6 @@ export function WhatsAppProductCatalog() {
   }, [selectedCategory, debouncedSearch, initialLoading, filterPrice])
 
   async function fetchPage(nextPage: number, replace = false, qOverride?: string) {
-    // cancela petición previa
     abortRef.current?.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -99,7 +94,6 @@ export function WhatsAppProductCatalog() {
       const raw = await res.json()
 
       if (Array.isArray(raw)) {
-        // compat: si el endpoint aún devuelve array plano
         const mapped = raw as IProduct[]
         if (replace) {
           setProducts(mapped)
@@ -141,16 +135,8 @@ export function WhatsAppProductCatalog() {
   const hasMore = page < totalPages
 
   return (
-    <div className="whatsapp-bg min-h-screen pt-24">
-      {/* Indicador de fecha estilo WhatsApp */}
-      <div className="text-center py-4">
-        <div className="inline-block bg-white bg-opacity-90 rounded-full px-3 py-1 shadow-sm">
-          <span className="text-xs text-gray-600">Hoy</span>
-        </div>
-      </div>
-
-      {/* Filtros - Siempre renderizados */}
-      <div className="px-4 mb-4 relative z-[100]">
+    <div className="catalog-pattern-bg min-h-screen pt-24 pb-12">
+      <div className="px-4 mb-6 relative  mt-6">
         <ProductFilters
           priceFilter={filterPrice}
           onPriceFilterChange={setFilterPrice}
@@ -164,33 +150,29 @@ export function WhatsAppProductCatalog() {
         />
       </div>
 
-      {/* Contenedor de productos con loading overlay */}
-      <div className="relative">
-        {/* Loading overlay solo para la carga inicial */}
+      <div className="relative px-4 max-w-7xl mx-auto">
         {initialLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {[...Array(limit)].map((_, i) => (
-              <WhatsAppProductCardSkeleton key={i} />
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         )}
 
-        {/* Loading indicator para búsquedas/filtros (más sutil) */}
         {loading && !initialLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0 opacity-60">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 opacity-60">
             {[...Array(8)].map((_, i) => (
-              <WhatsAppProductCardSkeleton key={i} />
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         )}
 
-        {/* Productos - Solo mostrar cuando no está en carga inicial */}
         {!initialLoading && (
           <>
             {products && products.length === 0 && !loading ? (
               <div className="text-center py-20">
-                <div className="bg-gray-100 bg-opacity-80 rounded-lg p-6 mx-4 shadow-sm">
-                  <p className="text-gray-600 text-lg mb-4">No se encontraron productos</p>
+                <div className="bg-white rounded-xl p-8 mx-4 shadow-sm border border-border max-w-md mx-auto">
+                  <p className="text-muted-foreground text-lg mb-4">No se encontraron productos</p>
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -199,7 +181,6 @@ export function WhatsAppProductCatalog() {
                       setFilterPrice("all")
                       setMaxPrice(0)
                     }}
-                    className="bg-white"
                   >
                     Limpiar filtros
                   </Button>
@@ -208,23 +189,23 @@ export function WhatsAppProductCatalog() {
             ) : (
               <>
                 <div
-                  className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-0 ${
+                  className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ${
                     loading ? "opacity-50" : ""
                   }`}
                 >
                   {products.map((p) => (
-                    <WhatsAppProductCard key={p._id} product={p} />
+                    <ProductCard key={p._id} product={p} />
                   ))}
                 </div>
 
-                {/* Cargar más */}
-                <div className="flex justify-center pb-20">
+                <div className="flex justify-center pt-8 pb-4">
                   {hasMore ? (
                     <Button
                       onClick={() => fetchPage(page + 1)}
                       disabled={loadingMore}
-                      className="bg-white text-emerald-700 border border-emerald-200"
                       variant="outline"
+                      size="lg"
+                      className="shadow-sm"
                     >
                       {loadingMore ? (
                         <>
@@ -232,11 +213,11 @@ export function WhatsAppProductCatalog() {
                           Cargando…
                         </>
                       ) : (
-                        "Cargar más"
+                        "Cargar más productos"
                       )}
                     </Button>
                   ) : products.length > 0 ? (
-                    <span className="text-xs text-gray-500 bg-white bg-opacity-80 px-3 py-1 rounded-full">
+                    <span className="text-sm text-muted-foreground bg-muted px-4 py-2 rounded-full">
                       No hay más productos
                     </span>
                   ) : null}

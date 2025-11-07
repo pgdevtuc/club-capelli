@@ -12,7 +12,7 @@ export function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { items } = useCart()
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = items.reduce((sum, item) => sum + (item.quantity|| 0), 0)
 
   return (
     <>

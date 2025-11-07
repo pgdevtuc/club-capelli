@@ -17,7 +17,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [showCheckout, setShowCheckout] = useState(false)
   const { items, getTotalPrice } = useCart()
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
   const totalPrice = getTotalPrice()
 
   // Cerrar automáticamente si el carrito se vacía
@@ -85,11 +85,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowCheckout(true)}>
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600" onClick={() => setShowCheckout(true)}>
                     <CreditCard className="h-4 w-4 mr-2" />
                     Proceder al Pago
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleClose}>
+                  <Button variant="outline" className="w-full bg-transparent" onClick={handleClose}>
                     Continuar Comprando
                   </Button>
                 </div>

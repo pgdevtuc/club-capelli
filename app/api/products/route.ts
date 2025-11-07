@@ -13,6 +13,7 @@ export async function GET(req: Request) {
     //const category = (searchParams.get("category") ?? "").trim()
     const priceFilter = (searchParams.get("priceFilter") ?? "").trim()
     const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined
+    const category = (searchParams.get("category") ?? "").trim()
 
     await connectDB()
     
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
         }
       : {}
 
-   // if (category) filter.category = category
+    if (category) filter.category = category
 
     if (maxPrice) {
       filter.$or = [

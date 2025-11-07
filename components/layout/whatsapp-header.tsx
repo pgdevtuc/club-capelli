@@ -11,19 +11,18 @@ import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 
 export function WhatsAppHeader() {
-  const pathname = usePathname();
+  const pathname = usePathname()
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { items } = useCart()
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = items.reduce((sum, item) => sum + (item?.quantity || 0), 0)
 
-  const param=useSearchParams();
-  const id = param.get("id");
+  const param = useSearchParams()
+  const id = param.get("id")
 
   const buildUrl = (basePath: string) => {
     return id ? `${basePath}?id=${id}` : basePath
   }
 
-  // Cerrar carrito automáticamente si se vacía
   useEffect(() => {
     if (totalItems === 0) {
       setIsCartOpen(false)
@@ -32,56 +31,50 @@ export function WhatsAppHeader() {
 
   return (
     <>
-      <header className="bg-emerald-600 text-white fixed top-0 left-0 right-0 z-40">
-        {/* Top bar con branding de la plataforma */}
-        <div className="bg-emerald-700 px-4 py-1 text-xs flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="text-emerald-200">Powered by</span>
-            <span className="font-semibold text-white">Waichatt</span>
+      <header className="bg-card border-b border-border fixed top-0 left-0 right-0 z-40 shadow-sm">
+        <div className="bg-orange-500 px-4 py-2 text-xs flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-primary-foreground/80">Powered by</span>
+            <span className="font-semibold text-primary-foreground">Waichatt</span>
           </div>
-          <Link href={buildUrl("/login")} className="text-emerald-200 hover:text-white flex items-center space-x-1">
-            <User className="h-3 w-3" />
+          <Link
+            href={buildUrl("/login")}
+            className="text-primary-foreground/80 hover:text-primary-foreground flex items-center gap-1 transition-colors"
+          >
+            <User className="h-3.5 w-3.5" />
             <span>Admin</span>
           </Link>
         </div>
 
-        {/* Header principal estilo WhatsApp */}
-        <div className="flex items-center px-4 py-3">
+        <div className="flex items-center px-4 py-4 bg-card">
           <Link href={pathname.includes("product") ? buildUrl("/") : buildUrl("#")}>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-emerald-700 p-2 mr-2">
+            <Button variant="ghost" size="icon" className="mr-3 hover:bg-muted">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div className="flex items-center space-x-3 flex-1">
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <div className="w-8 h-8 bg-gradient-to-r rounded-full flex items-center justify-center text-center">
-                <Image src="/images/CRISTAL_LOGO.webp" width={40} height={40} alt="logo" />
-              </div>
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-11 h-11 bg-muted rounded-full flex items-center justify-center overflow-hidden border-2 border-primary/20">
+              <Image src="/images/logoCapelli.png" width={50} height={50} alt="logo" className="object-cover" />
             </div>
             <div className="flex-1">
-              <h1 className="font-semibold text-white">Cristal Shop</h1>
-              <p className="text-xs text-emerald-100">Tienda en línea</p>
+              <h1 className="font-semibold text-foreground text-base">Club Capelli</h1>
+              <p className="text-xs text-muted-foreground">Tienda en línea</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-emerald-700 p-2 relative"
-              onClick={() => setIsCartOpen(true)}
-            >
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="relative hover:bg-muted" onClick={() => setIsCartOpen(true)}>
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium shadow-sm">
                   {totalItems}
                 </span>
               )}
             </Button>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-emerald-700 p-2">
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
               <Phone className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-emerald-700 p-2">
+            <Button variant="ghost" size="icon" className="hover:bg-muted">
               <MoreVertical className="h-5 w-5" />
             </Button>
           </div>

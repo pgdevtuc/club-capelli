@@ -11,7 +11,7 @@ export function FloatingCartButton() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { items } = useCart()
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
 
   useEffect(() => {
     setIsVisible(totalItems > 0)
@@ -28,7 +28,7 @@ export function FloatingCartButton() {
     <>
       <Button
         onClick={() => setIsCartOpen(true)}
-        className="floating-cart-btn bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 md:hidden"
+        className="floating-cart-btn bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 md:hidden"
         style={{
           position: "fixed",
           bottom: "20px",

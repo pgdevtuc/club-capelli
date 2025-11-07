@@ -65,8 +65,8 @@ export default function ProductPage() {
         price: Number(product.price),
         image: selectedVariantData.image_url || "/placeholder.svg",
         stock: availableStock,
-    },
-    quantity
+      },
+      quantity,
     )
     toast.success(`${quantity} producto(s) agregado(s) al carrito`)
   }
@@ -110,11 +110,11 @@ export default function ProductPage() {
   const installmentPrice = Number(product.price) / 3
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="catalog-pattern-bg min-h-screen">
       <WhatsAppHeader />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-10 pt-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-card rounded-xl shadow-md overflow-hidden border border-border">
           {/* Left Column - Product Image */}
           <div className="relative bg-gray-50 flex items-center justify-center p-8 lg:p-16">
             <div className="relative w-full max-w-md aspect-square">
@@ -156,10 +156,10 @@ export default function ProductPage() {
 
             {/* Price section */}
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-gray-900">
+              <div className="text-4xl lg:text-5xl font-bold text-foreground">
                 ${Number(currentPrice).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Precio sin impuestos $
                 {priceWithoutTax.toLocaleString("es-AR", {
                   minimumFractionDigits: 2,
@@ -168,11 +168,10 @@ export default function ProductPage() {
               </div>
             </div>
 
-
             {/* Color/Variant selector */}
             {product.variants && product.variants.length > 0 && (
               <div className="space-y-3">
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-foreground">
                   colores: <span className="font-bold">{product.variants.length}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -186,8 +185,8 @@ export default function ProductPage() {
                                                 font-medium text-sm transition-all
                                                 ${
                                                   selectedVariant === index
-                                                    ? "border-gray-900 bg-gray-900 text-white"
-                                                    : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                                                    ? "border-orange-500 bg-orange-500 hover:bg-orange-600 text-primary-foreground"
+                                                    : "border-input bg-card text-foreground hover:border-orange-500"
                                                 }
                                                 ${
                                                   !variant.visible || variant.stock_total === 0
@@ -204,16 +203,16 @@ export default function ProductPage() {
             )}
 
             {availableStock > 0 && availableStock <= 5 && (
-              <div className="text-blue-600 font-medium">¡Solo quedan {availableStock} en stock!</div>
+              <div className="text-accent font-medium">¡Solo quedan {availableStock} en stock!</div>
             )}
 
             {/* Quantity selector and Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <div className="flex items-center border-2 border-gray-300 rounded-lg w-full sm:w-auto">
+              <div className="flex items-center border-2 border-input rounded-lg w-full sm:w-auto">
                 <button
                   onClick={decrementQuantity}
                   disabled={quantity <= 1}
-                  className="p-3 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-3 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <Minus className="h-5 w-5" />
                 </button>
@@ -226,14 +225,14 @@ export default function ProductPage() {
                       setQuantity(val)
                     }
                   }}
-                  className="w-16 text-center font-medium border-none focus:outline-none"
+                  className="w-16 text-center font-medium border-none focus:outline-none bg-transparent"
                   min="1"
                   max={availableStock}
                 />
                 <button
                   onClick={incrementQuantity}
                   disabled={quantity >= availableStock}
-                  className="p-3 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-3 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <Plus className="h-5 w-5" />
                 </button>
@@ -242,13 +241,13 @@ export default function ProductPage() {
               <Button
                 onClick={handleAddToCart}
                 disabled={availableStock === 0}
-                className="flex-1 bg-pink-500 hover:bg-pink-600 text-white py-6 text-lg font-medium rounded-lg"
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-primary-foreground py-6 text-lg font-medium rounded-lg shadow-sm"
               >
                 Agregar al carrito
               </Button>
             </div>
 
-            {availableStock === 0 && <div className="text-red-600 font-medium">✗ Producto agotado</div>}
+            {availableStock === 0 && <div className="text-destructive font-medium">✗ Producto agotado</div>}
           </div>
         </div>
       </div>

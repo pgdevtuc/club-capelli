@@ -26,6 +26,7 @@ export interface IProduct extends Document {
   stock?: number
   quantity?: number | undefined
   variants: IVariant[]
+  category?: string
 }
 
 const VariantSchema = new Schema<IVariant>(
@@ -57,6 +58,7 @@ const ProductSchema = new Schema<IProduct>(
     stock: { type: Number, default: 0 },
     quantity: { type: Number, default: 0 },
     variants: { type: [VariantSchema], default: [] },
+    category: { type: String, default: "" },
   },
   { timestamps: true }
 )

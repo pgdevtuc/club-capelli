@@ -4,11 +4,15 @@ import "./globals.css"
 import { CartProvider } from "@/contexts/cart-context"
 import { Toaster } from "sonner"
 import { AuthProvider } from "@/components/auth/auth-providers"
+import { DynamicTitle } from "@/components/layout/dynamicTitle"
 
 export const metadata: Metadata = {
-  title: "Cristal Shop",
-  description: "Plataforma completa para crear tu tienda online con gestión de productos y carrito de compras",
+  title: "Club Capelli",
+  description: "Catalogo web Club Capelli",
   generator: 'next.js',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 
@@ -23,7 +27,8 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <CartProvider>
-              {children}
+            <DynamicTitle />
+            {children}
             <Toaster />
           </CartProvider>
         </AuthProvider>

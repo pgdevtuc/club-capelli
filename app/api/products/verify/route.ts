@@ -12,7 +12,7 @@ export async function GET(req: Request) {
         await connectDB();
         const findProduct = await product.findById<IProduct>(id).lean()
 
-        if (findProduct) return NextResponse.json({ product: {...findProduct,id:(findProduct as any)?._id,price:Number(findProduct?.price.replace('$',''))} }, { status: 200 })
+        if (findProduct) return NextResponse.json({ product: {...findProduct,id:(findProduct as any)?._id} }, { status: 200 })
         return NextResponse.json({ message: "No se encontro el producto" }, { status: 400 })
 
     } catch (error) {
