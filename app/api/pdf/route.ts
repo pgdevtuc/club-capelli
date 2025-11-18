@@ -65,18 +65,14 @@ export async function POST(request: NextRequest) {
 
     // Datos por defecto
     const datosEmpresa = {
-      nombre: body.empresa?.nombre || 'Cristal Shop',
-      direccion: body.empresa?.direccion || 'Dirección: Villafañe 75, Perico, Jujuy, Argentina 4610',
-      cuit: body.empresa?.cuit || '00-00000000-00',
-      telefono: body.empresa?.telefono || '+54 9 388 505-1954',
-      email: body.empresa?.email || 'cristalshop@gmail.com'
+      nombre: body.empresa?.nombre || 'Club Capelli',
+      direccion: body.empresa?.direccion || 'Dirección: 24 de Septiembre 205, Tucuman, Argentina 4000',
+      telefono: body.empresa?.telefono || '+549 381 598-3308',
     };
 
     const datosCliente = {
       nombre: body.cliente?.nombre || '---------',
-      direccion: body.cliente?.direccion || '---------',
-      cuit: body.cliente?.cuit || '---------',
-      email: body.cliente?.email || '---------'
+      direccion: body.cliente?.direccion || 'Sin envio'
     };
 
     const numeroFactura = body.numeroFactura || `001-${Date.now().toString().slice(-6)}`;
@@ -112,9 +108,6 @@ export async function POST(request: NextRequest) {
     doc.setFont('helvetica', 'normal');
     doc.text(datosEmpresa.direccion, 20, 77);
     doc.text(`Tel: ${datosEmpresa.telefono}`, 20, 84);
-    doc.text(`Email: ${datosEmpresa.email}`, 20, 91);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`CUIT: ${datosEmpresa.cuit}`, 20, 98);
 
     // Información del cliente (derecha)
     doc.setFontSize(14);
@@ -127,9 +120,6 @@ export async function POST(request: NextRequest) {
     doc.text(datosCliente.nombre, 120, 70);
     doc.setFont('helvetica', 'normal');
     doc.text(datosCliente.direccion, 120, 77);
-    doc.text(`Email: ${datosCliente.email}`, 120, 84);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`CUIT: ${datosCliente.cuit}`, 120, 91);
 
     // Detalles de la factura
     doc.setFillColor(248, 249, 250);
@@ -194,10 +184,13 @@ export async function POST(request: NextRequest) {
     const finalY = (doc as any).lastAutoTable.finalY + 10;
 
     // Tabla de totales (solo subtotal)
+    
+
     autoTable(doc, {
       startY: finalY,
       body: [
-        ['Subtotal:', `${subtotal.toLocaleString('es-AR')}`]
+        datosCliente.direccion.toLocaleLowerCase() != 'sin envio' ? ['Envío:', 'A Cotizar'] : ['Envío:', 'Sin envío'],
+        ['Subtotal:', `$${subtotal.toLocaleString('es-AR')}`]
       ],
       theme: 'plain',
       styles: {
@@ -222,7 +215,7 @@ export async function POST(request: NextRequest) {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('TOTAL A PAGAR:', 125, totalFinalY - 1);
-    doc.text(`${subtotal.toLocaleString('es-AR')}`, 185, totalFinalY - 1, { align: 'right' });
+    doc.text(`$${subtotal.toLocaleString('es-AR')}`, 185, totalFinalY - 1, { align: 'right' });
 
     const notesY = totalFinalY + 15;
 

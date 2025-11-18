@@ -19,7 +19,11 @@ interface OrderCardProps {
 
 export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const isShipping = !!(order.address ?? order.postal_code)
+  const isShipping = Boolean(
+  (order.address && order.address !== "null") ||
+  (order.postal_code && order.postal_code !== "null")
+);
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
