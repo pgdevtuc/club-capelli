@@ -29,10 +29,11 @@ export function ProductCard({ product }: ProductCardProps) {
       id: product.id,
       name: product.name,
       price: product.salePrice || Number(product.price),
-      image: (product as any).images[0],
+      image: product.images[0] ||  "/placeholder.png",
       stock: product.stock,
     })
   }
+
 
   const hasDiscount = product.salePrice && product.salePrice > 0 && product.salePrice < Number(product.price)
 
@@ -46,10 +47,11 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-border hover:border-primary/30 flex flex-col h-full group">
         <div className="relative overflow-hidden bg-white">
           <Image
-            src={product.images[0] || "/placeholder.svg"}
+            src={product.images[0]  || "/placeholder.png"}
             alt={product.name}
             width={400}
             height={250}
+            priority={true}
             className="w-full h-48 sm:h-52 md:h-56 lg:h-60 object-contain transition-transform duration-300 group-hover:scale-105 p-4"
           />
 

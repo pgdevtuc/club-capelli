@@ -188,8 +188,9 @@ export default function OrderFilters({
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
               <SelectItem value="En Proceso">En Proceso</SelectItem>
-              <SelectItem value="Cancelado">Cancelado</SelectItem>
+              <SelectItem value="Pagado">Pagado</SelectItem>
               <SelectItem value="Completado">Completado</SelectItem>
+              <SelectItem value="Cancelado">Cancelado</SelectItem>
             </SelectContent>
           </Select>
         </div>

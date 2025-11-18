@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { notFound } from "next/navigation"
 import { ProductPageSkeleton } from "@/components/products/product-page-skeleton"
 import type { IProduct } from "@/lib/models/product"
+import Image from "next/image"
 
 export default function ProductPage() {
   const params = useParams()
@@ -63,7 +64,7 @@ export default function ProductPage() {
         id: `${product.id}-${selectedVariantData.variant_id}`,
         name: `${product.name} - Color ${selectedVariant + 1}`,
         price: Number(product.price),
-        image: selectedVariantData.image_url || "/placeholder.svg",
+        image: selectedVariantData.image_url || product.images[0] || "/placeholder.svg",
         stock: availableStock,
       },
       quantity,
@@ -118,14 +119,16 @@ export default function ProductPage() {
           {/* Left Column - Product Image */}
           <div className="relative bg-gray-50 flex items-center justify-center p-8 lg:p-16">
             <div className="relative w-full max-w-md aspect-square">
-              <img
+              <Image
                 src={
                   product.variants
-                    ? product.variants[selectedVariant]?.image_url || "/placeholder.svg"
+                    ? product.variants[selectedVariant]?.image_url || product.images[0] || "/placeholder.svg"
                     : "/placeholder.svg"
                 }
                 alt={product.name}
                 className="w-full h-full object-contain"
+                width={400}
+                height={400}
               />
 
               {availableStock === 0 && (

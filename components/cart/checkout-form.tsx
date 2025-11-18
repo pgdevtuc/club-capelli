@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Package, CreditCard } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { toast } from "sonner"
-import { useSearchParams } from "next/navigation"
 import { formatPrice } from "@/lib/formatPrice"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 
@@ -24,52 +24,27 @@ interface CheckoutFormProps {
   totalPrice: number
   onBack: () => void
   onClose: () => void
+  id?:string
+  setTokenless: (value: boolean) => void
+  tokenless: boolean
 }
 
-export function CheckoutForm({ items, totalPrice, onBack, onClose }: CheckoutFormProps) {
-  const searchParams = useSearchParams()
-  const id = searchParams.get("id") || ""
-  const idCart = searchParams.get("idCart") || ""
+export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenless, tokenless}: CheckoutFormProps) {
+
   const [loading, setLoading] = useState(false)
-  const [tokenless, setTokenless] = useState(true)
-  //const [needsShipping, setNeedsShipping] = useState(false)
+  
+  const [needsShipping, setNeedsShipping] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     address: "",
+    postalCode: "",
   })
   const { clearCart } = useCart()
 
-  useEffect(() => {
-    if (idCart) {
-      try {
-        const fetchData = async () => {
-          const res = await fetch(`/api/cart?idCart=${idCart}`)
-          if (res.ok) {
-            const data = await res.json()
-            return setFormData({ ...formData, name: data?.name })
-          } else return
-        }
-        fetchData()
-      } catch (error) {
-        return
-      }
-    }
-    if (!id) return setTokenless(true)
-    try {
-      const fetchData = async () => {
-        const res = await fetch(`/api/token?id=${id}`)
-        if (res.ok) return setTokenless(false)
-        else return setTokenless(true)
-      }
-      fetchData()
-    } catch (error) {
-      setTokenless(true)
-    }
-  }, [id])
 
   const sendToWebhook = async () => {
     try {
-      const res = await fetch(`/api/token?id=${id}`)
+      const res = await fetch(`/api/token?id=${id||""}`)
       if (res.ok) {
         const data = await res.json()
         if (data.token) {
@@ -89,8 +64,10 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose }: CheckoutFor
               })),
               totalPrice: totalPrice,
               formData: formData,
+              needsShipping: needsShipping,
             }),
           })
+
           if (response.ok) {
             const link = document.createElement("a")
             link.href = "https://wa.me/+5493816592823"
@@ -122,6 +99,14 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose }: CheckoutFor
     setLoading(true)
     if (!formData.name) {
       toast.warning("El nombre es obligatorio", { position: "top-right", style: { color: "orange" } })
+      setLoading(false)
+      return
+    }
+    if (needsShipping && (!formData.postalCode || !formData.address)) {
+      toast.warning("Para envío, completá Código Postal y Dirección", {
+        position: "top-right",
+        style: { color: "orange" },
+      })
       setLoading(false)
       return
     }
@@ -187,7 +172,43 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose }: CheckoutFor
                   placeholder="Tu nombre completo"
                   required
                 />
+            </div>
+          </div>
+
+            {/* Envío */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="needsShipping"
+                  checked={needsShipping}
+                  onCheckedChange={(checked) => setNeedsShipping(!!checked)}
+                />
+                <Label htmlFor="needsShipping">¿Necesito envío?</Label>
               </div>
+
+              {needsShipping && (
+                <div className="grid gap-4 mt-2">
+                  <div>
+                    <Label htmlFor="postalCode">Código Postal</Label>
+                    <Input
+                      id="postalCode"
+                      value={formData.postalCode}
+                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                      placeholder="Ej: 4000"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Dirección</Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      placeholder="Calle, número, barrio"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Resumen del pedido */}

@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { IOrder } from "@/types/order"
+import Image from "next/image"
 
 
 interface OrderCardProps {
@@ -18,15 +19,18 @@ interface OrderCardProps {
 
 export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const isShipping = !!(order.address ?? order.postal_code)
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Cancelado":
         return "bg-red-500 text-white hover:bg-red-700"
       case "En Proceso":
-        return "bg-orange-500 text-white bg-orange-700"
+        return "bg-orange-500 text-white hover:bg-orange-700"
+      case "Pagado":
+        return "bg-blue-500 text-white hover:bg-blue-700"
       case "Completado":
-        return "bg-green-500 text-white bg-green-700"
+        return "bg-green-500 text-white hover:bg-green-700"
       default:
         return "bg-gray-500 text-white"
     }
@@ -47,11 +51,12 @@ export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
           {/* Primera fila: Botón expandir, ID de orden y badge de estado */}
           <div className="flex items-center justify-between" >
             <div className="flex items-center gap-2 md:gap-4">
-              <Button variant="ghost" size="sm"  className="p-1">
+              <Button variant="ghost" size="sm" className="p-1">
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
               <span className="font-medium text-sm md:text-base">Orden {order.orderId}</span>
               <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+              <Badge variant="default" className="bg-orange-500">{isShipping ? "Envio" : "Retiro en local"}</Badge>
             </div>
           </div>
 
@@ -85,8 +90,9 @@ export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="En Proceso">En Proceso</SelectItem>
-                    <SelectItem value="Cancelado">Cancelado</SelectItem>
+                    <SelectItem value="Pagado">Pagado</SelectItem>
                     <SelectItem value="Completado">Completado</SelectItem>
+                    <SelectItem value="Cancelado">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -94,19 +100,32 @@ export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
 
             {order.products.map((product, index) => (
               <div key={index} className="mb-4 p-3 md:p-4 bg-gray-200 rounded-lg">
-                <h5 className="font-semibold text-base md:text-lg mb-2">{product.name}</h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Cantidad: </span>
-                    <span>{product.quantity}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Precio: </span>
-                    <span>{formatCurrency(product.price)}</span>
-                  </div>
-                  <div className="sm:col-span-2 md:col-span-1">
-                    <span className="text-muted-foreground">Subtotal: </span>
-                    <span className="font-medium">{formatCurrency(product.price * product.quantity)}</span>
+                <div className="flex items-start gap-4">
+                  <Image
+                    src={product.image || "/placeholder.jpg"}
+                    alt={product.name}
+                    className="w-16 h-16 md:w-20 md:h-20 rounded object-cover flex-shrink-0"
+                    width={80}
+                    height={80}
+                  />
+
+                  <div className="flex-1">
+                    <h5 className="font-semibold text-base md:text-lg mb-2">{product.name}</h5>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Cantidad: </span>
+                        <span>{product.quantity}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Precio: </span>
+                        <span>{formatCurrency(product.price)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Subtotal: </span>
+                        <span className="font-medium">{formatCurrency(product.price * product.quantity)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -125,9 +144,21 @@ export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
                 <span className="text-muted-foreground">Fecha: </span>
                 <span>{format(new Date(order.createdAt), "dd/MM/yyyy", { locale: es })}</span>
               </div>
+              {isShipping && (
+                <>
+                  <div>
+                    <span className="text-muted-foreground">Dirección: </span>
+                    <span>{order.address}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Código Postal: </span>
+                    <span>{order.postal_code}</span>
+                  </div>
+                </>
+              )}
               <div>
-                <span className="text-muted-foreground">OrderID Uala: </span>
-                <span>{order?.orderId_uala||"Sin OrderID"}</span>
+                <span className="text-muted-foreground">OrderID Mercado Pago: </span>
+                <span>{order?.orderId_mercadoPago || "Sin OrderID"}</span>
               </div>
               <div className="md:text-right">
                 <span className="text-base md:text-lg font-semibold">Total: {formatCurrency(order.total)}</span>

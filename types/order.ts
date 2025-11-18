@@ -2,6 +2,7 @@ export interface IOrderProduct {
   name: string
   quantity: number
   price: number
+  image?: string | null
 }
 
 export interface IOrder {
@@ -9,11 +10,12 @@ export interface IOrder {
   orderId: string
   customerName: string
   customerPhone: string
+  address?: string | null
+  postal_code?: string | null
   products: IOrderProduct[]
-  status: "En Proceso" | "Cancelado" | "Completado"
+  status: "En Proceso" | "Pagado" | "Cancelado" | "Completado"
   total: number
-  orderId_uala?: string
+  orderId_mercadoPago?: string
   createdAt: Date
   updatedAt?: Date
 }
-

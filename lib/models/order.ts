@@ -4,16 +4,19 @@ export interface IOrderProduct {
   name: string
   quantity: number
   price: number
+  image?: string
 }
 
 export interface IOrder extends Document {
   orderId: string
   customerName: string
   customerPhone: string
+  address?: string
+  postal_code?: string
   products: IOrderProduct[]
-  status: "En Proceso" | "Cancelado" | "Completado"
+  status: "En Proceso" | "Pagado" |  "Cancelado" | "Completado"
   total: number
-  orderId_uala: string
+  orderId_mercadoPago: string
   createdAt: Date
   updatedAt: Date
 }
@@ -43,6 +46,14 @@ const OrderSchema = new Schema<IOrder>(
       trim: true,
       index: true,
     },
+    address: {
+      type: String,
+      required: false,
+    },
+    postal_code: {
+      type: String,
+      required: false,
+    },
     products: {
       type: [ProductSchema],
       required: true,
@@ -53,7 +64,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ["En Proceso", "Cancelado", "Completado"],
+      enum: ["En Proceso", "Pagado", "Cancelado", "Completado"],
       default: "En Proceso",
       index: true,
     },
@@ -62,7 +73,7 @@ const OrderSchema = new Schema<IOrder>(
       required: true,
       min: 0,
     },
-    orderId_uala: {
+    orderId_mercadoPago: {
       type: String,
       required: false,
       trim: true,

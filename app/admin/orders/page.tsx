@@ -11,7 +11,7 @@ import { IOrder } from "@/types/order"
 import { AdminHeader } from "@/components/admin/AdminHeader"
 import { OrderStats } from "@/components/orders/OrderStats"
 import { format as formatDate } from "date-fns"
-import type { DateRange } from "react-day-picker" 
+import type { DateRange } from "react-day-picker"
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<IOrder[]>([])
@@ -49,7 +49,7 @@ export default function OrdersPage() {
         throw new Error("Response not ok")
       }
     } catch (error) {
-      toast.error("Error",{position:"top-center",style:{color:"red"},duration:3000})
+      toast.error("Error", { position: "top-center", style: { color: "red" }, duration: 3000 })
     } finally {
       setIsLoading(false)
     }
@@ -75,14 +75,14 @@ export default function OrdersPage() {
       })
 
       if (response.ok) {
-        toast.success("Estado de la orden actualizado",{ position: "top-center", style: { color: "green" }, duration: 3000 })
+        toast.success("Estado de la orden actualizado", { position: "top-center", style: { color: "green" }, duration: 3000 })
         SetStatusRefresh(newStatus)
         fetchOrders()
       } else {
         throw new Error("Update failed")
       }
     } catch (error) {
-      toast("Error al actualizar el estado",{position:"top-center",style:{color:"red"},duration:3000})
+      toast("Error al actualizar el estado", { position: "top-center", style: { color: "red" }, duration: 3000 })
     }
   }
 
@@ -98,65 +98,67 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 container mx-auto p-4 md:p-6">
+    <>
       <AdminHeader />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-balance">Órdenes</h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">Gestiona pedidos y ventas</p>
+      <div className="min-h-screen bg-gray-100 container mx-auto p-4 md:p-6">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-balance">Órdenes</h1>
+              <p className="text-muted-foreground mt-1 text-sm md:text-base">Gestiona pedidos y ventas</p>
+            </div>
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-orange-500 hover:bg-orange-600  w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Orden
+            </Button>
           </div>
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700  w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Orden
-          </Button>
-        </div>
 
-        <OrderStats status={statusRefresh} />
+          <OrderStats status={statusRefresh} />
 
-        {/* Filters */}
-        <OrderFilters
-          phoneFilter={phoneFilter}
-          setPhoneFilter={setPhoneFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          onClearFilters={handleClearFilters}
-        />
+          {/* Filters */}
+          <OrderFilters
+            phoneFilter={phoneFilter}
+            setPhoneFilter={setPhoneFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            onClearFilters={handleClearFilters}
+          />
 
-        {/* Orders List */}
-        <div className="space-y-4">
-          {isLoading && (
-            <div className="container mx-auto p-6">
-              <div className="flex items-center justify-center h-64">
-                <div className="text-lg">Cargando órdenes...</div>
+          {/* Orders List */}
+          <div className="space-y-4">
+            {isLoading && (
+              <div className="container mx-auto p-6">
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-lg">Cargando órdenes...</div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {!isLoading && filteredOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No se encontraron órdenes</p>
-            </div>
-          ) : (
-            !isLoading &&
-            filteredOrders.map((order) => (
-              <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} />
-            ))
-          )}
+            {!isLoading && filteredOrders.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No se encontraron órdenes</p>
+              </div>
+            ) : (
+              !isLoading &&
+              filteredOrders.map((order) => (
+                <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} />
+              ))
+            )}
+          </div>
+
+          {/* Create Order Modal */}
+          <CreateOrderModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onOrderCreated={handleOrderCreated}
+          />
         </div>
-
-        {/* Create Order Modal */}
-        <CreateOrderModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onOrderCreated={handleOrderCreated}
-        />
       </div>
-    </div>
+    </>
   )
 }

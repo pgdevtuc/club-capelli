@@ -7,6 +7,7 @@ import { useCart } from "@/contexts/cart-context"
 import { CartItem } from "./cart-item"
 import { CheckoutForm } from "./checkout-form"
 import { ShoppingBag, CreditCard } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -15,7 +16,10 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const [showCheckout, setShowCheckout] = useState(false)
+  const [tokenless, setTokenless] = useState(true)
   const { items, getTotalPrice } = useCart()
+  const searchParams = useSearchParams()
+  const id = searchParams.get("id") || ""
 
   const totalItems = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
   const totalPrice = getTotalPrice()
@@ -39,6 +43,22 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       setShowCheckout(false)
     }
   }, [totalItems])
+
+
+  useEffect(() => {
+    if (!id) return setTokenless(true)
+    try {
+      const fetchData = async () => {
+        const res = await fetch(`/api/token?id=${id}`)
+        if (res.ok) return setTokenless(false)
+        else return setTokenless(true)
+      }
+      fetchData()
+    } catch (error) {
+      setTokenless(true)
+    }
+  }, [id])
+
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
@@ -67,6 +87,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               totalPrice={totalPrice}
               onBack={() => setShowCheckout(false)}
               onClose={handleClose}
+              id={id}
+              setTokenless={setTokenless}
+              tokenless={tokenless}
             />
           ) : (
             <>
@@ -87,7 +110,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="space-y-2">
                   <Button className="w-full bg-orange-500 hover:bg-orange-600" onClick={() => setShowCheckout(true)}>
                     <CreditCard className="h-4 w-4 mr-2" />
-                    Proceder al Pago
+                    Continuar con el Pedido
                   </Button>
                   <Button variant="outline" className="w-full bg-transparent" onClick={handleClose}>
                     Continuar Comprando
