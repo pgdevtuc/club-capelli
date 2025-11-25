@@ -67,10 +67,10 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
               needsShipping: needsShipping,
             }),
           })
-
+          
           if (response.ok) {
             const link = document.createElement("a")
-            link.href = "https://wa.me/+5493816592823"
+            link.href = `https://wa.me/+${process.env.NEXT_PUBLIC_PHONE}`
             link.target = "_blank"
             link.rel = "noopener noreferrer"
             document.body.appendChild(link)
@@ -134,7 +134,7 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
             className="w-full mt-6 mb-5 bg-[#25D366] hover:bg-[#128C7E] text-white"
             onClick={() => {
               const link = document.createElement("a")
-              link.href = "https://wa.me/+5493816592823"
+              link.href =`https://wa.me/+${process.env.NEXT_PUBLIC_PHONE}?text=Hola%2C%20quiero%20iniciar%20mi%20compra%20en%20Club%20Capelli.`
               link.target = "_blank"
               link.rel = "noopener noreferrer"
               document.body.appendChild(link)
