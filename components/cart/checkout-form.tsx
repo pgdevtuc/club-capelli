@@ -12,6 +12,8 @@ import { useCart } from "@/contexts/cart-context"
 import { toast } from "sonner"
 import { formatPrice } from "@/lib/formatPrice"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface CheckoutFormProps {
   items: Array<{
@@ -24,27 +26,61 @@ interface CheckoutFormProps {
   totalPrice: number
   onBack: () => void
   onClose: () => void
-  id?:string
+  id?: string
   setTokenless: (value: boolean) => void
   tokenless: boolean
 }
 
-export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenless, tokenless}: CheckoutFormProps) {
+// Datos de provincias, localidades y sucursales
+const PROVINCES = ["TUCUMAN", "JUJUY", "SALTA", "SANTIAGO DEL ESTERO"] as const
 
+const LOCALITIES: Record<(typeof PROVINCES)[number], string[]> = {
+  TUCUMAN: ["SAN MIGUEL DE TUCUMAN", "YERBA BUENA", "MONTEROS"],
+  JUJUY: ["SAN SALVADOR DE JUJUY"],
+  SALTA: ["SALTA CAPITAL"],
+  "SANTIAGO DEL ESTERO": ["SANTIAGO CAPITAL"],
+}
+
+const BRANCHES_BY_LOCALITY: Record<string, string[]> = {
+  "SAN MIGUEL DE TUCUMAN": [
+    "Córdoba 561",
+    "Crisóstomo Álvarez 545",
+    "24 de Septiembre 205",
+    "San Juan 790",
+    "Salta 785",
+  ],
+  "YERBA BUENA": ["Av. Aconquija y Luis Lobo de la Vega"],
+  MONTEROS: ["Colón 214"],
+  "SAN SALVADOR DE JUJUY": ["Necochea 345"],
+  "SALTA CAPITAL": ["Buenos Aires 68 Loc.12 - Galeria Bs.AS"],
+  "SANTIAGO CAPITAL": ["Pellegrini 18"],
+}
+
+export function CheckoutForm({ items, totalPrice, onBack, onClose, id, setTokenless, tokenless }: CheckoutFormProps) {
   const [loading, setLoading] = useState(false)
-  
+
+  // Método de entrega: "envio" o "retiro" (obligatorio elegir uno)
+  const [deliveryMethod, setDeliveryMethod] = useState<"envio" | "retiro" | "">("")
+
+  // Mantengo needsShipping para compatibilidad con el flujo existente
   const [needsShipping, setNeedsShipping] = useState(false)
+
+  // Datos para retiro en sucursal
+  const [province, setProvince] = useState<string>("")
+  const [city, setCity] = useState<string>("")
+  const [branch, setBranch] = useState<string>("")
+
   const [formData, setFormData] = useState({
     name: "",
+    dni: "",
     address: "",
     postalCode: "",
   })
   const { clearCart } = useCart()
 
-
   const sendToWebhook = async () => {
     try {
-      const res = await fetch(`/api/token?id=${id||""}`)
+      const res = await fetch(`/api/token?id=${id || ""}`)
       if (res.ok) {
         const data = await res.json()
         if (data.token) {
@@ -65,9 +101,18 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
               totalPrice: totalPrice,
               formData: formData,
               needsShipping: needsShipping,
+              deliveryMethod: deliveryMethod,
+              pickupData:
+                deliveryMethod === "retiro"
+                  ? {
+                    province,
+                    city,
+                    branch,
+                  }
+                  : null,
             }),
           })
-          
+
           if (response.ok) {
             const link = document.createElement("a")
             link.href = `https://wa.me/+${process.env.NEXT_PUBLIC_PHONE}`
@@ -79,7 +124,7 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
 
             // Simulación de procesamiento del pedido
             setTimeout(() => {
-              toast.success("¡Pedido realizado!", { position: "top-right", style: { color: "green" } })
+              toast.success("¡Pedido realizado!", {description:"Confirma el pedido en tu whatsapp!", position: "top-right", style: { color: "green" } })
               clearCart()
               onClose()
               setLoading(false)
@@ -87,9 +132,11 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
           }
         }
       } else {
+        toast.error("¡Error!", { description: "Hubo un error al enviar el pedido", position: "top-right", style: { color: "red" } })
         setTokenless(true)
       }
     } catch (error) {
+      toast.error("¡Error!", { description: "Hubo un error al enviar el pedido", position: "top-right", style: { color: "red" } })
       setTokenless(true)
     }
   }
@@ -97,20 +144,78 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    if (!formData.name) {
-      toast.warning("El nombre es obligatorio", { position: "top-right", style: { color: "orange" } })
-      setLoading(false)
-      return
-    }
-    if (needsShipping && (!formData.postalCode || !formData.address)) {
-      toast.warning("Para envío, completá Código Postal y Dirección", {
+
+    const nombre = formData.name?.trim()
+    const dniRaw = (formData.dni ?? "").toString().trim()
+
+    // Validación: método de entrega obligatorio
+    if (!deliveryMethod) {
+      toast.warning("Debés seleccionar Envío o Retiro en sucursal", {
         position: "top-right",
         style: { color: "orange" },
       })
       setLoading(false)
       return
     }
-    sendToWebhook()
+
+    // Validación campos obligatorios
+    if (!nombre || !dniRaw) {
+      toast.warning("El Nombre y DNI son obligatorio", {
+        position: "top-right",
+        style: { color: "orange" },
+      })
+      setLoading(false)
+      return
+    }
+
+    // Elimino todo lo que no sea dígito
+    const dniLimpio = dniRaw.replace(/\D/g, "")
+
+    // Si tenía caracteres no numéricos o no tiene exactamente 8 dígitos -> warning
+    const tieneCaracteresInvalidos = /\D/.test(dniRaw)
+    if (tieneCaracteresInvalidos || dniLimpio.length !== 8) {
+      toast.warning("Formato incorrecto de DNI. Debe contener exactamente 8 números.", {
+        position: "top-right",
+        style: { color: "orange" },
+      })
+      setLoading(false)
+      return
+    }
+
+    // Validación de envío
+    if (deliveryMethod === "envio") {
+      if (!formData.postalCode || !formData.address) {
+        toast.warning("Para envío, completá Código Postal y Dirección", {
+          position: "top-right",
+          style: { color: "orange" },
+        })
+        setLoading(false)
+        return
+      }
+    }
+
+    // Validación de retiro en sucursal
+    if (deliveryMethod === "retiro") {
+      if (!province || !city || !branch) {
+        toast.warning("Para retiro, seleccioná Provincia, Localidad y Sucursal", {
+          position: "top-right",
+          style: { color: "orange" },
+        })
+        setLoading(false)
+        return
+      }
+      formData.address = ""
+      formData.postalCode = ""
+    }
+
+    // Armás el payload con el DNI ya parseado (solo 8 números)
+    formData.dni = dniLimpio
+
+    try {
+      await sendToWebhook()
+    } finally {
+      setLoading(false)
+    }
   }
 
   // const shippingCost = needsShipping ? 10 : 0
@@ -134,7 +239,7 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
             className="w-full mt-6 mb-5 bg-[#25D366] hover:bg-[#128C7E] text-white"
             onClick={() => {
               const link = document.createElement("a")
-              link.href =`https://wa.me/+${process.env.NEXT_PUBLIC_PHONE}?text=Hola%2C%20quiero%20iniciar%20mi%20compra%20en%20Club%20Capelli.`
+              link.href = `https://wa.me/+${process.env.NEXT_PUBLIC_PHONE}?text=Hola%2C%20quiero%20iniciar%20mi%20compra%20en%20Club%20Capelli.`
               link.target = "_blank"
               link.rel = "noopener noreferrer"
               document.body.appendChild(link)
@@ -172,21 +277,52 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
                   placeholder="Tu nombre completo"
                   required
                 />
-            </div>
-          </div>
-
-            {/* Envío */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="needsShipping"
-                  checked={needsShipping}
-                  onCheckedChange={(checked) => setNeedsShipping(!!checked)}
-                />
-                <Label htmlFor="needsShipping">¿Necesito envío?</Label>
               </div>
+              <div>
+                <Label htmlFor="dni">DNI *</Label>
+                <Input
+                  id="dni"
+                  value={formData.dni}
+                  onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                  placeholder="12345678"
+                  required
+                />
+              </div>
+            </div>
 
-              {needsShipping && (
+            {/* Método de entrega */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-foreground">Método de entrega</h4>
+              <RadioGroup
+                value={deliveryMethod}
+                onValueChange={(v) => {
+                  const val = v as "envio" | "retiro"
+                  setDeliveryMethod(val)
+                  setNeedsShipping(val === "envio")
+                  // Reset campos según el método elegido
+                  if (val === "retiro") {
+                    // limpiar dirección/envío opcionalmente
+                  }
+                  if (val === "envio") {
+                    setProvince("")
+                    setCity("")
+                    setBranch("")
+                  }
+                }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              >
+                <div className="flex items-center space-x-2 border rounded-md p-3">
+                  <RadioGroupItem value="envio" id="envio" />
+                  <Label htmlFor="envio" className="cursor-pointer">Envío</Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-md p-3">
+                  <RadioGroupItem value="retiro" id="retiro" />
+                  <Label htmlFor="retiro" className="cursor-pointer">Retiro en sucursal</Label>
+                </div>
+              </RadioGroup>
+
+              {/* Datos de envío */}
+              {deliveryMethod === "envio" && (
                 <div className="grid gap-4 mt-2">
                   <div>
                     <Label htmlFor="postalCode">Código Postal</Label>
@@ -206,6 +342,73 @@ export function CheckoutForm({ items, totalPrice, onBack, onClose,id, setTokenle
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       placeholder="Calle, número, barrio"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Datos para retiro en sucursal */}
+              {deliveryMethod === "retiro" && (
+                <div className="grid gap-4 mt-2">
+                  <div>
+                    <Label>Provincia</Label>
+                    <Select
+                      value={province}
+                      onValueChange={(val) => {
+                        setProvince(val)
+                        setCity("")
+                        setBranch("")
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Seleccioná una provincia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROVINCES.map((prov) => (
+                          <SelectItem key={prov} value={prov}>
+                            {prov}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Localidad</Label>
+                    <Select
+                      value={city}
+                      onValueChange={(val) => {
+                        setCity(val)
+                        setBranch("")
+                      }}
+                      disabled={!province}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={province ? "Seleccioná una localidad" : "Primero elegí provincia"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(province ? LOCALITIES[province as (typeof PROVINCES)[number]] : []).map((loc) => (
+                          <SelectItem key={loc} value={loc}>
+                            {loc}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Sucursal</Label>
+                    <Select value={branch} onValueChange={setBranch} disabled={!city}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={city ? "Seleccioná una sucursal" : "Primero elegí localidad"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(city ? BRANCHES_BY_LOCALITY[city] || [] : []).map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}

@@ -57,6 +57,8 @@ export default function OrderCard({ order, onStatusChange }: OrderCardProps) {
     return "Fecha inválida";
   };
 
+  console.log(order.pickupdata)
+
   return (
     <Card className="mb-4">
       <CardContent className="p-3 md:p-4">
